@@ -6,6 +6,4 @@
   <img src="https://img.shields.io/badge/MySQL-27588a.svg?style=for-the-badge&logo=#python&logoColor=white" />&nbsp
 
   [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&center=true&width=435&lines=An+engineering+student)](https://git.io/typing-svg)
-
-  
 </div>

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Dashboard</title>
+    <style>
+        /*  CSS VARIABLES (Easy theming) */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb; /* gray-50 */
+            --bg-tertiary: rgba(249, 250, 251, 0.3); /* gray-50/30 */
+            --border-color: #e5e7eb; /* gray-200 */
+            --text-primary: #1f2937; /* gray-800 */
+            --text-secondary: #6b7280; /* gray-500 */
+            --text-muted: #9ca3af; /* gray-400 */
+            --accent-blue: #2563eb; /* blue-600 */
+            --accent-blue-bg: #eff6ff; /* blue-50 */
+            --accent-green: #16a34a; /* green-600 */
+            --accent-green-bg: #f0fdf4; /* green-50 */
+            --header-height: 80px;
+        }
+
+        /*  RESET & BASE  */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /*  SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /*  HEADER  */
+        .header {
+            height: var(--header-height);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            background: var(--bg-primary);
+            flex-shrink: 0;
+            gap: 1rem;
+        }
+
+        .logo-container {
+            height: 48px;
+            width: 192px;
+            flex-shrink: 0;
+        }
+
+        .logo-container img {
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+            object-position: left;
+        }
+
+        .btn-refresh {
+            background: #1f2937; /* gray-800 */
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-refresh:hover {
+            background: #374151; /* gray-700 */
+        }
+
+        .btn-refresh:active {
+            background: #111827; /* gray-900 */
+        }
+
+        /* AUTO Button */
+        .btn-auto-main {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 10px;
+        }
+        .btn-auto-main:hover { background: #1d4ed8; } /* blue-700 */
+
+        /*  MAIN LAYOUT  */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* LEFT SIDEBAR (LIST)  */
+        .sidebar-left {
+            width: 25%;
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .email-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .email-item {
+            position: relative;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .email-item:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+
+        .email-item.selected {
+            background-color: var(--accent-blue-bg);
+            border-left-color: var(--accent-blue);
+        }
+
+        .email-item.status-taken {
+            background-color: var(--accent-green-bg);
+        }
+
+        .email-item.status-taken:hover {
+            background-color: #dcfce7; /* green-100 */
+        }
+
+        .status-check {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .email-content {
+            padding-left: 0;
+        }
+
+        .email-item.status-taken .email-content {
+            padding-left: 1.5rem;
+        }
+
+        .email-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .email-subject {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /*  CENTER (DETAIL) */
+        .detail-view {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-view.hidden {
+            display: none;
+        }
+
+        .detail-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            background: rgba(249, 250, 251, 0.5);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .detail-subject {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .detail-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .detail-meta strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .detail-path {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            margin-top: 0.25rem;
+        }
+
+        .detail-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .detail-body img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .detail-body a {
+            color: var(--accent-blue);
+            text-decoration: underline;
+        }
+
+        /*  RIGHT SIDEBAR (METADATA) */
+        .sidebar-right {
+            width: 25%;
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-right.hidden {
+            display: none;
+        }
+
+        .metadata-title {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .metadata-card {
+            background: var(--bg-primary);
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .metadata-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .metadata-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status-taken-text { color: var(--accent-green); }
+        .status-open-text { color: var(--text-secondary); }
+
+        /*  EMPTY STATES */
+        .empty-state {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .empty-state.hidden {
+            display: none;
+        }
+
+        .empty-metadata {
+            width: 25%;
+            background: var(--bg-tertiary);
+            display: none;
+        }
+
+        .empty-metadata.hidden {
+            display: none;
+        }
+
+        /* UTILITIES */
+        .hidden { display: none !important; }
+        .loading { color: var(--text-muted); font-style: italic; }
+        .error { color: #dc2626; } /* red-600 */
+
+        /*  PROSE (Email body styling) */
+        .prose p { margin-bottom: 1rem; }
+        .prose h1, .prose h2, .prose h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .prose ul, .prose ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        .prose blockquote { border-left: 4px solid var(--border-color); padding-left: 1rem; color: var(--text-secondary); font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo-container">
+            <img src="./Test.png" alt="Company Logo">
+        </div>
+        <button id="btn-refresh" class="btn-refresh" onclick="fetchEmails()">
+            Refresh Data
+        </button>
+
+        <!-- AUTO Button, 2026. 03. 05 -->
+        <button id="btn-auto-trigger" class="btn-auto-main" onclick="openAutoWindow()">
+            AUTO
+        </button>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        
+        <!-- LEFT SIDEBAR: Email List -->
+        <aside class="sidebar-left">
+            <div class="sidebar-header">
+                <span>Incoming Stream</span>
+                <span id="email-count">0</span>
+            </div>
+            <div id="email-list" class="email-list">
+                <div class="email-item" style="cursor: default;">
+                    <div class="email-content loading">Loading...</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: Detail View (Hidden by default) -->
+        <main id="detail-view" class="detail-view hidden">
+            <div class="detail-header">
+                <h2 id="detail-subject" class="detail-subject"></h2>
+                <div class="detail-meta">
+                    <div>
+                        <strong>From:</strong> <span id="detail-sender"></span>
+                    </div>
+                    <div id="detail-time"></div>
+                </div>
+                <div id="detail-path" class="detail-path"></div>
+            </div>
+            <div id="detail-body" class="detail-body prose">
+                <!-- Email HTML content injected here -->
+            </div>
+        </main>
+
+        <!-- CENTER: Empty State -->
+        <div id="empty-state" class="empty-state">
+            Select an item
+        </div>
+
+        <!-- RIGHT SIDEBAR: Metadata (Hidden by default) -->
+        <aside id="metadata-view" class="sidebar-right hidden">
+            <div class="metadata-title">Metadata</div>
+            <div class="metadata-card">
+                <label class="metadata-label">Deal ID</label>
+                <div id="meta-deal" class="metadata-value"></div>
+            </div>
+            <div class="metadata-card">
+                <label class="metadata-label">Status</label>
+                <div id="meta-status" class="metadata-value"></div>
+            </div>
+        </aside>
+
+        <!-- RIGHT: Empty Metadata State -->
+        <div id="metadata-empty" class="empty-metadata"></div>
+
+    </div>
+
+
+
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // COnfiguration
+        const API_BASE = "http://127.0.0.1:8000/api";
+
+
+
+
+    //Bad Quality but just for Quick Test, to realise some features, 
+
+    
+        // STEP 2: DYNAMIC AUTO FILL
+    window.fillAutoData = async function() {
+        const container = document.getElementById('form-container');
+        const btn = document.querySelector('.btn-auto-fill');
+        
+        btn.textContent = "Loading...";
+
+         // --- DUMMY DATA FOR PROTOTYPE ---
+        const dummyData = {
+            'Gutacthen': 'M12345',
+            'NAME': 'Billy Irish',
+            'DATE': '04/03/2026',
+            'LAW_FIRM': 'ABC DEF'
+        };
+
+    let data = dummyData;
+        
+        try {
+            // 1. Fetch real data from backend (which reads input.csv)
+            const response = await fetch(API_BASE + "/get-csv-data");
+            if(!response.ok) throw new Error("Failed to load CSV data");
+            
+            const realData = await response.json();
+            console.log("Fetched Data:", realData);
+
+            // 2. Fill inputs
+            const inputs = container.querySelectorAll('input');
+            let filledCount = 0;
+
+            inputs.forEach(input => {
+                const key = input.name;
+                // Check if key exists in CSV data
+                if(realData[key] !== undefined) {
+                    input.value = realData[key];
+                    filledCount++;
+                    
+                    // Flash effect
+                    input.style.backgroundColor = '#dcfce7'; // light green
+                    setTimeout(() => input.style.backgroundColor = 'transparent', 500);
+                }
+            });
+            
+            btn.textContent = `Filled ${filledCount} Fields`;
+
+        } catch (error) {
+            alert("Error: " + error.message);
+            btn.textContent = "Error";
+        } finally {
+            setTimeout(() => btn.textContent = "AUTO (Fill)", 2000);
+        }
+    };
+
+    // STEP 1 & 3: DOWNLOAD (Sends edits back to server)
+    window.triggerDownload = async function() {
+        const container = document.getElementById('form-container');
+        const inputs = container.querySelectorAll('input');
+        const payload = {};
+
+        // Gather data (User might have edited what Auto Fill provided)
+        inputs.forEach(input => {
+            payload[input.name] = input.value;
+        });
+
+        const btn = document.querySelector('.btn-download');
+        btn.textContent = "Generating...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(API_BASE + "/generate-docx", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Generation failed");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `Output_${payload.Gutacthen || 'Doc'}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btn.textContent = "Download DOCX";
+            btn.disabled = false;
+        }
+    };
+
+        // State
+        let emailsData = [];
+        let selectedEmailId = null;
+        const htmlCache = new Map(); // Cache for HTML content to avoid re-fetching
+
+        // 2026.03.06 - Updated to match input.docx placeholders
+        const templateKeys = [
+            'Gutacthen',
+            'NAME',
+            'DATE',
+            'LAW_FIRM'  
+        ];
+
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("🚀 App Initializing...");
+            const listContainer = document.getElementById('email-list');
+            if (!listContainer) {
+            console.error("❌ Critical Error: #email-list not found in DOM");
+            return;
+        }
+            // Auto-load on start but we can remove if we want to update manually
+            setupEventListeners();              //Event listener for the event delegation
+            fetchEmails();
+        });
+
+
+        // 0. Event Lister
+        function setupEventListeners() {
+            const listContainer = document.getElementById('email-list');
+
+            // Ensure to click a valid item and it has an index (single click)
+            listContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.email-item');
+                if (item && item.dataset.index) {
+                    const index = parseInt(item.dataset.index, 10);
+                    selectEmail(index);
+                }
+            });
+
+            listContainer.addEventListener('dblclick', (e) => {
+            const item = e.target.closest('.email-item');
+            if (item && item.dataset.index) {
+                const index = parseInt(item.dataset.index, 10);
+                openEmailInNewWindow(emailsData[index]);
+            }
+        });
+        };
+
+        // 1. FETCH EMAIL LIST
+        async function fetchEmails() {
+            const btn = document.getElementById('btn-refresh');
+            const originalText = btn.textContent;
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+
+            try {
+                // Measure network time only
+                const networkStart = performance.now();
+                
+                const res = await fetch(`${API_BASE}/emails`, { 
+                    cache: 'no-store' // Ensure fresh data
+                });
+                
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                
+                const rawData = await res.json();
+                const networkEnd = performance.now();
+                
+                console.log(`⚡ Network fetch: ${(networkEnd - networkStart).toFixed(1)}ms`);
+
+                // Sort by time descending (newest first)
+                emailsData = rawData.sort((a, b) => 
+                    new Date(b.sent_time) - new Date(a.sent_time)
+                );
+                
+                // Update count
+                document.getElementById('email-count').textContent = emailsData.length;
+                
+                // Measure render time separately
+                const renderStart = performance.now();
+                renderList();
+                const renderEnd = performance.now();
+                
+                console.log(`🎨 Render list: ${(renderEnd - renderStart).toFixed(1)}ms`);
+                console.log(`📊 Total emails: ${emailsData.length}`);
+
+            } catch (error) {
+                console.error("❌ Error fetching emails:", error);
+                document.getElementById('email-list').innerHTML = 
+                    `<div class="email-item error" style="cursor: default;">
+                        <div class="email-content">Connection Failed: ${error.message}</div>
+                     </div>`;
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 2. FETCH HTML CONTENT (With Cache)
+        async function fetchHtmlContent(path) {
+            // Check cache first
+            if (htmlCache.has(path)) {
+                console.log(`💾 Cache hit for: ${path}`);
+                return htmlCache.get(path);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/html-content?path=${encodeURIComponent(path)}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const data = await res.json();
+                const content = data.content || "No content found";
+                
+                // Store in cache
+                htmlCache.set(path, content);
+                return content;
+            } catch (error) {
+                console.error("Error loading HTML:", error);
+                return `<div class="error">Error loading file content: ${error.message}</div>`;
+            }
+        }
+
+        // 3. RENDER LIST (Optimized with DocumentFragment)
+        function renderList() {
+            const listContainer = document.getElementById('email-list');
+            listContainer.innerHTML = '';
+            
+            if (emailsData.length === 0) {
+                listContainer.innerHTML = '<div style="padding:1rem; text-align:center; color:#999">No emails found.</div>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            emailsData.forEach((email, index) => {
+                const item = document.createElement('div');
+                
+                // Class Logic
+                let classes = 'email-item';
+                if (email.status === 1) classes += ' status-taken';
+                
+                item.className = classes;
+                
+                // IMPORTANT: Store index here for the Event Listener to find
+                item.dataset.index = index; 
+                item.dataset.id = email.sent_time; // used for highlighting active state
+
+                const statusIcon = email.status === 1 ? `<div class="status-check">✓</div>` : '';
+                // const senderName = email.sender.split('<')[0].replace(/"/g, '').trim();
+                const senderRaw = email.sender || "Unknown";
+                const senderName = senderRaw.split('<')[0].replace(/"/g, '').trim();
+
+                item.innerHTML = `
+                    ${statusIcon}
+                    <div class="email-content">
+                        <div class="email-header">
+                            <span>${escapeHtml(senderName)}</span>
+                            <span>${formatTime(email.sent_time)}</span>
+                        </div>
+                        <div class="email-subject">
+                           ${escapeHtml(email.subject)}
+                        </div>
+                    </div>
+                `;
+                fragment.appendChild(item);
+            });
+
+            listContainer.appendChild(fragment);
+        }
+
+
+        // 4. HANDLE SELECTION
+        async function selectEmail(index) {
+
+            const email = emailsData[index];
+            if(!email) return;
+
+            // Highlight Selection
+            const allItems = document.querySelectorAll('.email-item');
+            allItems.forEach(el => el.classList.remove('selected'));
+            
+            const selectedItem = document.querySelector(`.email-item[data-index="${index}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+                selectedItem.classList.remove('status-taken'); // Optional: removes green bg when selected
+            }
+
+            // Toggle visibility
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('metadata-empty').classList.add('hidden');
+            document.getElementById('detail-view').classList.remove('hidden');
+            document.getElementById('metadata-view').classList.remove('hidden');
+
+            // Fill header info
+            document.getElementById('detail-subject').textContent = email.subject;
+            document.getElementById('detail-sender').textContent = email.sender;
+            // document.getElementById('detail-time').textContent = formatTime(email.sent_time);
+            document.getElementById('detail-time').textContent = new Date(email.sent_time).toLocaleString();
+            document.getElementById('detail-path').textContent = `File: ${email.html_path}`;
+
+            // Fill metadata
+            document.getElementById('meta-deal').textContent = email.deal_number || "N/A";
+            const statusEl = document.getElementById('meta-status');
+            if (email.status === 1) {
+                statusEl.textContent = "TAKEN";
+                statusEl.className = "metadata-value status-taken-text";
+            } else {
+                statusEl.textContent = "OPEN";
+                statusEl.className = "metadata-value status-open-text";
+            }
+
+            // Load body content
+            const bodyContainer = document.getElementById('detail-body');
+
+            
+            bodyContainer.innerHTML = '<div class="loading">Loading content...</div>';
+            
+            // Measure content fetch
+            const contentStart = performance.now();
+            const htmlContent = await fetchHtmlContent(email.html_path);
+            const contentEnd = performance.now();
+            
+            console.log(`📄 Content fetch: ${(contentEnd - contentStart).toFixed(1)}ms`);
+            
+            bodyContainer.innerHTML = htmlContent;
+        }
+
+        // 5. Open the window function
+        async function openEmailInNewWindow(email) {
+            const newWindow = window.open("", "_blank", "width=900,height=800,scrollbars=yes,resizable=yes");
+
+        if (!newWindow) {
+            alert("Please allow popups");
+            return;
+        };
+
+        const currentStyle = document.querySelector('style').innerHTML;
+
+    const html = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>${escapeHtml(email.subject)}</title>
+                <style>
+                    ${currentStyle}
+                    
+                    /* POPUP SPECIFIC OVERRIDES */
+                    body { 
+                        margin: 0; 
+                        padding: 0; 
+                        height: 100vh; 
+                        display: flex; 
+                        flex-direction: column; 
+                        overflow: hidden; /* Prevent body scroll, let content scroll */
+                    }
+
+                    /* 1. HEADER (Fixed) */
+                    .popup-header {
+                        padding: 1.5rem 2rem;
+                        background: #fff;
+                        border-bottom: 2px solid var(--border-color);
+                        flex-shrink: 0; /* Don't shrink */
+                    }
+                    
+                    /* 2. CONTENT (Scrollable) */
+                    .popup-content {
+                        flex: 1; /* Fills remaining space */
+                        overflow-y: auto; /* Internal Scrollbar */
+                        padding: 2rem;
+                        background: var(--bg-primary);
+                    }
+
+                    /* 3. FOOTER (Fixed) */
+                    .popup-footer {
+                        padding: 1rem 2rem;
+                        background: var(--bg-secondary);
+                        border-top: 1px solid var(--border-color);
+                        display: flex;
+                        justify-content: flex-end; /* Align right */
+                        flex-shrink: 0;
+                    }
+
+                    /* Close Button Style */
+                    .btn-close {
+                        background: #dc2626; /* Red */
+                        color: white;
+                        border: none;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 4px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        text-transform: uppercase;
+                        font-size: 0.85rem;
+                        transition: background 0.2s;
+                    }
+                    .btn-close:hover { background: #b91c1c; }
+                </style>
+            </head>
+            <body>
+
+                <!-- SECTION 1: HEADER -->
+                <div class="popup-header">
+                    <h2 class="detail-subject" style="font-size: 1.25rem;">${escapeHtml(email.subject)}</h2>
+                    
+                    <div class="detail-meta" style="margin-top: 0.5rem;">
+                        <strong>From: ${escapeHtml(email.sender)}</strong>
+                        <span>${new Date(email.sent_time).toLocaleString()}</span>
+                    </div>
+
+                    <div class="detail-path" style="margin-top: 0.5rem;">
+                        File: ${escapeHtml(email.html_path)}
+                    </div>
+                </div>
+
+                <!-- SECTION 2: CONTENT -->
+                <div id="popup-body" class="popup-content prose">
+                    <div class="loading">Loading content...</div>
+                </div>
+
+                <!-- SECTION 3: FOOTER -->
+                <div class="popup-footer">
+                    <button class="btn-close" onclick="window.close()">Close Window</button>
+                </div>
+
+            </body>
+            </html>
+        `;
+
+
+        // 5. Write & Close Stream
+        newWindow.document.write(html);
+        newWindow.document.close();
+
+    try {
+        const content = await fetchHtmlContent(email.html_path);
+        
+        // 5. Inject the content into the new window
+        const bodyContainer = newWindow.document.getElementById('popup-body');
+        if(bodyContainer) {
+            bodyContainer.innerHTML = content;
+        }
+    } catch (err) {
+        newWindow.document.getElementById('popup-body').innerHTML = 
+            `<div class="error">Failed to load content: ${err.message}</div>`;
+    }
+}
+
+
+    // 2026.03.05 - AUTO Button, New Window
+    function openAutoWindow() {
+        const autoWindow = window.open("", "_blank", "width=600,height=800,scrollbars=yes,resizable=yes");
+        if (!autoWindow) { alert("Please allow popups"); return; }
+
+        // Get Current CSS Styles to replicate theme
+        const currentStyle = document.querySelector('style').innerHTML;
+
+        const html = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>CSV to Word Auto</title>
+                <style>
+                    ${currentStyle}
+
+                    /* OVERRIDES FOR POPUP LAYOUT */
+                    body {
+                        margin: 0; padding: 0; height: 100vh;
+                        display: flex; flex-direction: column;
+                        background: var(--bg-secondary);
+                    }
+                    
+                    .auto-header {
+                        padding: 1.5rem;
+                        background: #fff;
+                        border-bottom: 1px solid var(--border-color);
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    .btn-auto-fill {
+                        background: #fff;
+                        color: var(--text-primary);
+                        border: 1px solid var(--text-primary);
+                        padding: 0.5rem 1.5rem;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        transition: all 0.2s;
+                    }
+                    .btn-auto-fill:hover { background: var(--bg-secondary); }
+
+                    .auto-content {
+                        flex: 1;
+                        padding: 2rem;
+                        overflow-y: auto;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+
+                    .form-row {
+                        display: flex;
+                        align-items: center;
+                        background: #fff;
+                        border: 1px solid var(--border-color);
+                        border-radius: 4px;
+                        padding: 0.5rem;
+                    }
+
+                    .form-label {
+                        width: 30%;
+                        padding-left: 0.5rem;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                        font-size: 0.85rem;
+                    }
+
+                    .form-input {
+                        width: 70%;
+                        border: none;
+                        padding: 0.5rem;
+                        font-size: 0.9rem;
+                        color: var(--text-primary);
+                        outline: none;
+                        background: transparent;
+                        border-left: 1px solid var(--bg-secondary);
+                    }
+                    .form-input:focus { background: var(--accent-blue-bg); }
+
+                    .auto-footer {
+                        padding: 1.5rem;
+                        border-top: 1px solid var(--border-color);
+                        background: #fff;
+                        display: flex;
+                        justify-content: flex-end; 
+                    }
+
+                    .btn-download {
+                        background: var(--text-primary);
+                        color: #fff;
+                        border: none;
+                        padding: 0.75rem 2rem;
+                        font-size: 0.9rem;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        cursor: pointer;
+                        border-radius: 4px;
+                    }
+                    .btn-download:hover { background: #000; }
+                    .btn-download:disabled { opacity: 0.7; cursor: not-allowed; }
+                </style>
+            </head>
+            <body>
+                
+                <div class="auto-header">
+                    <h2 style="font-size:1.25rem;">CSV to Word Converter</h2>
+                    <button class="btn-auto-fill" onclick="window.fillAutoData()">
+                        AUTO (Fill)
+                    </button>
+                </div>
+
+                <div id="form-container" class="auto-content">
+                    <!-- Inputs injected via JS below -->
+                </div>
+
+                <div class="auto-footer">
+                    <button class="btn-download" onclick="window.triggerDownload()">
+                        Download DOCX
+                    </button>
+                </div>
+
+                <script>
+                    const API_BASE = "${API_BASE}";
+                    
+                    // --- 1. FILL DATA LOGIC (Connects to Backend) ---
+                    window.fillAutoData = async function() {
+                        const container = document.getElementById('form-container');
+                        const btn = document.querySelector('.btn-auto-fill');
+                        
+                        btn.textContent = "Loading...";
+                        
+                        try {
+                            // Fetch real data from backend (which reads input.csv)
+                            const response = await fetch(API_BASE + "/get-csv-data");
+                            if(!response.ok) throw new Error("Failed to load CSV data");
+                            
+                            const realData = await response.json();
+                            console.log("Fetched Data:", realData);
+
+                            // Fill inputs
+                            const inputs = container.querySelectorAll('input');
+                            let filledCount = 0;
+
+                            inputs.forEach(input => {
+                                const key = input.name;
+                                // Check if key exists in CSV data
+                                if(realData[key] !== undefined) {
+                                    input.value = realData[key];
+                                    filledCount++;
+                                    
+                                    // Flash effect
+                                    input.style.backgroundColor = '#dcfce7'; 
+                                    setTimeout(() => input.style.backgroundColor = 'transparent', 500);
+                                }
+                            });
+                            
+                            btn.textContent = "Done (" + filledCount + ")";
+
+                        } catch (error) {
+                            alert("Error: " + error.message);
+                            btn.textContent = "Error";
+                        } finally {
+                            setTimeout(() => btn.textContent = "AUTO (Fill)", 2000);
+                        }
+                    };
+
+                    // --- 2. DOWNLOAD LOGIC (Sends POST request) ---
+                    window.triggerDownload = async function() {
+                        const container = document.getElementById('form-container');
+                        const inputs = container.querySelectorAll('input');
+                        const payload = {};
+
+                        // Gather data from inputs
+                        inputs.forEach(input => {
+                            payload[input.name] = input.value;
+                        });
+
+                        const btn = document.querySelector('.btn-download');
+                        const oldText = btn.textContent;
+                        btn.textContent = "Generating...";
+                        btn.disabled = true;
+
+                        try {
+                            // THIS FIXES THE 405 METHOD NOT ALLOWED ERROR
+                            // We use method: "POST" to send the data
+                            const response = await fetch(API_BASE + "/generate-docx", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (!response.ok) throw new Error("Generation failed: " + response.statusText);
+
+                            // Handle File Download
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            // Set filename
+                            a.download = "Output_" + (payload.Gutacthen || "Doc") + ".docx";
+                            document.body.appendChild(a);
+                            a.click();
+                            
+                            // Cleanup
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+
+                        } catch (error) {
+                            alert("Error: " + error.message);
+                        } finally {
+                            btn.textContent = oldText;
+                            btn.disabled = false;
+                        }
+                    };
+                <\/script>
+            </body>
+            </html>
+            `;
+
+            autoWindow.document.write(html);
+            autoWindow.document.close();
+
+            // Inject the input fields dynamically based on templateKeys
+            const formContainer = autoWindow.document.getElementById('form-container');
+            if(formContainer) {
+                templateKeys.forEach(key => {
+                    const row = autoWindow.document.createElement('div');
+                    row.className = 'form-row';
+                    
+                    const label = autoWindow.document.createElement('div');
+                    label.className = 'form-label';
+                    label.textContent = key.replace(/_/g, ' '); // Format label
+                    
+                    const input = autoWindow.document.createElement('input');
+                    input.className = 'form-input';
+                    input.name = key;
+                    input.type = "text";
+                    input.placeholder = "Enter value...";
+
+                    row.appendChild(label);
+                    row.appendChild(input);
+                    formContainer.appendChild(row);
+                });
+            }
+        }
+
+
+
+
+
+
+
+
+
+        // HElper : Time Formatter
+        function formatTime(isoString) {
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } catch { 
+                return isoString; 
+            }
+        }
+
+        // Helper : Escape HTML (Security)
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Helper : Clear Cache (Optional debug)
+        function clearCache() {
+            htmlCache.clear();
+            console.log('🗑️ HTML cache cleared');
+        }
+    </script>
+</body>
+</html>

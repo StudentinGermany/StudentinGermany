@@ -1,0 +1,5 @@
+├── algorithms/
+   └── heliolinc/
+        ├── adapter.py  # adapts the standardised data to the alg and supports output
+        ├── requirements.txt
+        └── src/   # where the original alg lives

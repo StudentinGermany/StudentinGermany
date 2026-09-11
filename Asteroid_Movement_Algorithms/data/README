@@ -1,0 +1,16 @@
+data/
+├── heliolinc_test_data.csv
+└── results/
+    └── heliolinc/
+        └── heliolinc_test_data/
+            └── YYYYMMDDTHHMMSSZ.json
+
+Current validation fixture:
+
+- `heliolinc_test_data.csv`: test dataset with 10 object groups and 100 detections per group. Heliolinc finds every group with 100/100 predictions
+
+Object ID = GGGGNNNNIIIITTTT
+GGGG = object group
+NNNN = total objects in dataset
+IIII = detection index within group
+TTTT = total detections in group
